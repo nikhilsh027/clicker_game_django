@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Click The Target Game</title>
+    <style>
+        #gameArea {
+            width: 600px;
+            height: 400px;
+            border: 2px solid black;
+            position: relative;
+            background-color: #f0f0f0;
+        }
+        
+        #target {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+        }
+        
+        #score {
+            font-size: 24px;
+            margin: 10px;
+        }
+        
+        #timer {
+            font-size: 24px;
+            margin: 10px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <div id="timer">Time: 30s</div>
+    <div id="gameArea">
+        <div id="target"></div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const target = document.getElementById('target');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = true;
+        
+        function randomPosition() {
+            const maxX = gameArea.clientWidth - target.clientWidth;
+            const maxY = gameArea.clientHeight - target.clientHeight;
+            
+            target.style.left = Math.random() * maxX + 'px';
+            target.style.top = Math.random() * maxY + 'px';
+        }
+        
+        function updateScore() {
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
+        
+        function updateTimer() {
+            timerDisplay.textContent = `Time: ${timeLeft}s`;
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        function endGame() {
+            gameActive = false;
+            alert(`Game Over! Final Score: ${score}`);
+            saveScore();
+        }
+        
+        async function saveScore() {
+            try {
+                const response = await fetch('/save-score/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ score: score })
+                });
+                
+                if (response.ok) {
+                    console.log('Score saved successfully');
+                }
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        }
+        
+        target.addEventListener('click', () => {
+            if (gameActive) {
+                score += 1;
+                updateScore();
+                randomPosition();
+            }
+        });
+        
+        // Start game
+        randomPosition();
+        
+        // Start timer
+        const timer = setInterval(() => {
+            timeLeft -= 1;
+            updateTimer();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
